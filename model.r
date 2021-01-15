@@ -3,7 +3,7 @@
 #----------------------------------------------
 # The mathematical model is published in Frits Franssen, Arno Swart, Joke van der Giessen, Arie Havelaar, Katsuhisa Takumi, Parasite to patient: A quantitative risk model for Trichinella spp. in pork and wild boar meat, International Journal of Food Microbiology, Volume 241, 2017, Pages 262-275, ISSN 0168-1605.
 
-# Trichinealla ML = Trichinella muscle larvae
+# Trichinella muscle larvae (ML)
 
 #----------------------------------------------
 # library
