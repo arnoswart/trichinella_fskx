@@ -328,6 +328,10 @@ table.res <- data.frame(n.portions = numeric(0),
 #----------------------------------------------
 # Run simulations 
 #----------------------------------------------
+larvae.dia <- infec.stat.swine(m=m, k=k, nSwine, swine_per_pool=swine_per_pool, 
+                               propDiaphragm= propDiaphragm, sim_max= sim_max, 
+                               alpha = alpha, beta=beta)
+n.sim   <- length( larvae.dia ) # Number of simulations
 
 for( larvae.sim in larvae.dia )
 { 
@@ -342,7 +346,7 @@ for( larvae.sim in larvae.dia )
     ############################################
     # Calculate total larvae in muscle groups (over all carcasses. #
     ############################################
-    # 
+    
     shoulder <- list( x=numeric(0), ill=numeric(0), zeros=0, zeros.after.cooking=0 )
     loin     <- list( x=numeric(0), ill=numeric(0), zeros=0, zeros.after.cooking=0 )
     belly    <- list( x=numeric(0), ill=numeric(0), zeros=0, zeros.after.cooking=0 )
