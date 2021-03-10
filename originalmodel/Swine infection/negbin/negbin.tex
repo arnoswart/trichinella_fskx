@@ -1,0 +1,64 @@
+\documentclass[a4paper, notitlepage]{article}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+
+\begin{document}
+
+\title{Negative binomial likelihood}
+\maketitle
+Assume the larva are distributed according to a negative binomial distribution with pdf
+\[
+P(Z=z; m,k ) = \binom{z+k-1}{z} \left( \frac{k}{k+m}\right)^{k+z} \left(\frac{m}{k}\right)^z
+\]
+For $q=5000$ individuals, we found a positive result, and for $n-q=10^6-5000$ individuals a negative result. The probabilty of finding zero larva is
+\[
+p_0 = P(Z=0; m,k ) = \left( \frac{k}{k+m}\right)^{k},
+\]
+and the probability of finding one or more larva is
+\[
+p_1 = 1-p_0
+\]
+The contribution to the likelihood is
+\[
+p_0^{n-q} p_1^q
+\]
+For $r=35$ individuals, additionally the larvae were counted, after we knew they were positive. Hence, for the $i$-th individual, the contribution to the likelihood is
+\[
+P( Z=z_i | Z>0 ; m,k) = \frac{ P( Z=z_i \cap Z>0 ; m,k) }{P(Z>0;m,k)} = 
+\begin{cases}
+0 & \mbox{for $z_i=0$},\\
+\frac{ P( Z=z_i; m,k) }{p_1} & \mbox{for $z_i>0$}.
+\end{cases}
+\]
+Since for those individuals zero is not possible, we can safely use the second case. The total likelihood becomes
+\[
+l(m,k) = p_0^{n-q} p_1^q \prod_{i=1}^r \frac{ P( Z=z_i; m,k) }{p_1}
+\]
+But this is also equal to
+\[
+l(m,k) = p_0^{n-q} p_1^{q-r} \prod_{i=1}^r P( Z=z_i; m,k)
+\]
+This has the interpretation ``$n-q$ were negative, $q-r$ were positive, and $r$ were counted``, but that is not what happened in our experiment. What goes wrong? 
+
+Or is it the case that the likelihoods are different, but I should include the binomial coefficients. So for experiment 1
+\[
+l(m,k) = \binom{n}{q} p_0^{n-q} p_1^{q-r} \binom{q}{r}\prod_{i=1}^r P( Z=z_i; m,k)
+\]
+but for experiment 2,
+\[
+l(m,k) = \binom{n-r}{q-r} p_0^{n-q} p_1^{q-r} \binom{n}{r}\prod_{i=1}^r P( Z=z_i; m,k).
+\]
+Since
+\[
+\binom{n}{q}\binom{q}{r} = \frac{ n! q! }{q! r! (n-q)! (q-r)!}=\frac{ n! }{ r! (n-q)! (q-r)!}
+\]
+and
+\[
+\binom{n-r}{q-r} \binom{n}{r} =\frac{ (n-r)! n! }{(q-r)! (n-r-q+r)! r! (n-r)! } =\frac{ n! }{(q-r)! (n-q)! r!  }
+\]
+No, again they are equal. I'm puzzled.
+
+\end{document}
