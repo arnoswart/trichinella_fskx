@@ -119,12 +119,24 @@ inactivation <- function( k, alpha.plus, T.star, I0, T0,T1, t1 ){
   I0*((exp(k*T.star) + exp( k * T1 ))/(exp(k*T.star) +exp( k * T0 )))^(alpha.plus * t1 /( k*(T0-T1)))                                                                                          
 }
 
+#
+# New inactivation function
+#
+inactivation_new <- function(I0, T0,T1, t1){
+  # just using the final temperature for now.
+  # later better do a piecewise linear approximation between T0 and T1
+  temp = T1
+  p_surv = -1.38e3 + 8.56*t1 + 1.09e1*temp - 4.06e-2*t1*temp +8.31e2*log(t1) +
+            2.94e2*log(temp) -2.53e2*log(t1)*log(temp)
+  return( I0*(1-p_surv) )
+}
+
 cook <- function( part ){
   is.welldone <- rbinom( length( part$x ), 1, 0.9 )
   
-  cooked.rare   <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3,I0=part$x, T0=20,T1=54, t1=2.5 ) )
-  cooked.welldone <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3,I0=cooked.rare, T0=54,T1=76.7, t1=7.5 ) )
-  cooked.medium   <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3,I0=cooked.rare, T0=54,T1=63, t1=1.5 ) )
+  cooked.rare   <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, I0=part$x, T0=20,T1=54, t1=2.5 ) )
+  cooked.welldone <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, I0=cooked.rare, T0=54,T1=76.7, t1=7.5 ) )
+  cooked.medium   <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, I0=cooked.rare, T0=54,T1=63, t1=1.5 ) )
   
   ### Medium, USDA, 4 minutes cooking + 3 minutes rest ###
   cooked.medium <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3,I0=cooked.medium, T0=63,T1=62.9, t1=3 ) )
@@ -201,6 +213,7 @@ dose.response <- function( ab, d, r )
     return( 1 + exp( d *log(1-p) ) - exp(d*log(1-r*p))- exp(d*log(1-(1-r)*p) )  )
   }
 }
+
 ########################################
 # Infection status list of swine  #
 ########################################
@@ -316,14 +329,8 @@ table.res <- data.frame(n.portions = numeric(0),
 # Run simulations 
 #----------------------------------------------
 
-larvae.dia <- infec.stat.swine(m=m, k=k, nSwine, swine_per_pool=swine_per_pool, propDiaphragm= propDiaphragm, sim_max= sim_max, alpha = alpha, beta=beta)
-n.sim   <- length( larvae.dia ) # Number of simulations
-pb <- txtProgressBar(min = 0, max = n.sim, style=3 )
-
-loop <- 0
 for( larvae.sim in larvae.dia )
 { 
-  setTxtProgressBar(pb, loop <- loop + 1 )
   if( nrow( larvae.sim) > 1 )
   {
     
