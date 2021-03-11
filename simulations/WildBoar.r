@@ -8,7 +8,12 @@ pop <- 38336743
 r <- 0.7
 nCarc <- 5000
 n_portions_per_person <- 0.68
-w <- c( 2, 50, 76, 103, 120, 26 )
+n_portions_per_part <- tibble(  diaphragm=2,
+                                shoulder =35,
+                                belly    =54, 
+                                loin     =144, 
+                                ham      =121, 
+                                other    =48)
 alpha <- 1.53575 
 sim_max <- 1000
 swine_per_pool <- 20

@@ -1,7 +1,9 @@
 #----------------------------------------------
 # Reference and info
 #----------------------------------------------
-# The mathematical model is published in Frits Franssen, Arno Swart, Joke van der Giessen, Arie Havelaar, Katsuhisa Takumi, Parasite to patient: A quantitative risk model for Trichinella spp. in pork and wild boar meat, International Journal of Food Microbiology, Volume 241, 2017, Pages 262-275, ISSN 0168-1605.
+# The mathematical model is published in Frits Franssen, Arno Swart, Joke van der Giessen, Arie Havelaar, Katsuhisa Takumi, 
+# Parasite to patient: A quantitative risk model for Trichinella spp. in pork and wild boar meat, 
+# International Journal of Food Microbiology, Volume 241, 2017, Pages 262-275, ISSN 0168-1605.
 
 # Trichinella muscle larvae (ML)
 
@@ -13,8 +15,7 @@ library( dplyr )
 #----------------------------------------------
 # name/load input
 #----------------------------------------------
-names(w)<-c('diaphragm', 'shoulder', 'belly','loin','ham', 'other')
-names(p)<-c('diaphragm', 'shoulder', 'belly','loin','ham', 'other')
+names(p) <- names(n_portions_per_part)
 
 #----------------------------------------------
 # load functions
@@ -36,34 +37,37 @@ add.table.row <- function( table.input, n.portions, n.zeros, n.cooked.zeros, p.c
   )
 }
 
-add.to.table <- function( table.input, nCarc, w, p.swine, shoulder, belly, loin ){
+add.to.table <- function( table.input, nCarc, n_portions_per_part, p.swine, shoulder, belly, loin ){
   
   # Shoulder 
-  n.portions     <- nCarc * w[2]               # nr. of carcassess * nr of portions per carcass
+  n.portions     <- nCarc * n_portions_per_part[['shoulder']] # nr. of carcassess * nr of portions per carcass
   n.zeros        <- shoulder$zeros
   n.cooked.zeros <- shoulder$zeros.after.cooking + shoulder$zeros # Need to add them up!
   p.cooked       <- 1 - n.cooked.zeros/n.portions
   p.ill          <- mean( shoulder$ill )
   
-  table.input <- add.table.row( table.input, n.portions, n.zeros, n.cooked.zeros, p.cooked, p.ill, p.swine, "shoulder" )
+  table.input <- add.table.row( table.input, n.portions, n.zeros, n.cooked.zeros, 
+                                p.cooked, p.ill, p.swine, "shoulder" )
   
   # Belly
-  n.portions     <- nCarc * w[3]               # nr. of carcassess * nr of portions per carcass
+  n.portions     <- nCarc * n_portions_per_part[['belly']] # nr. of carcassess * nr of portions per carcass
   n.zeros        <- belly$zeros
   n.cooked.zeros <- belly$zeros.after.cooking + belly$zeros # Need to add them up!
   p.cooked       <- 1 - n.cooked.zeros/n.portions
   p.ill          <- mean( belly$ill )
   
-  table.input <- add.table.row( table.input, n.portions, n.zeros, n.cooked.zeros, p.cooked, p.ill, p.swine, "belly" )
+  table.input <- add.table.row( table.input, n.portions, n.zeros, n.cooked.zeros, 
+                                p.cooked, p.ill, p.swine, "belly" )
   
   # Loin
-  n.portions     <- nCarc * w[4]               # nr. of carcassess * nr of portions per carcass
+  n.portions     <- nCarc * n_portions_per_part[['loin']]               # nr. of carcassess * nr of portions per carcass
   n.zeros        <- loin$zeros
   n.cooked.zeros <- loin$zeros.after.cooking + loin$zeros # Need to add them up!
   p.cooked       <- 1 - n.cooked.zeros/n.portions
   p.ill          <- mean( loin$ill )
   
-  table.input <- add.table.row( table.input, n.portions, n.zeros, n.cooked.zeros, p.cooked, p.ill, p.swine, "loin" )
+  table.input <- add.table.row( table.input, n.portions, n.zeros, n.cooked.zeros,
+                                p.cooked, p.ill, p.swine, "loin" )
   
   return( table.input)
 }
@@ -101,17 +105,23 @@ sim.swine <- function( m, k, nSwine, swine_per_pool, propDiaphragm, a, b ){
   escaped <- which( detected==0 & df.pool$larvaInPool > 0 )
   
   # Corresponding swine
-  escapedSwine <- data.frame( larva = numeric(0) )
+  escapedSwine <- tibble( larva = numeric(0) )
   
   
-  if( length( escaped>0) )
+  if( length( escaped>0) ){
     for( i in 1:length( escaped) ){
       ind <- ((escaped[i]-1)*swine_per_pool+1) : (escaped[i]*swine_per_pool)
-      escapedSwine <- rbind( escapedSwine, data.frame( larva=larvaInHunderdGrams[ ind ]) )
+      escapedSwine <- rbind( escapedSwine, tibble( larva=larvaInHunderdGrams[ ind ]) )
     }
-  # Tally, make frequency table
-  escapedSwine <- escapedSwine %>% group_by( larva ) %>% tally %>% select( larva, Freq=n )
+  } else {
+    escapedSwine <- rbind( escapedSwine, tibble( larva=NA) )
+  }
   
+  # Tally, make frequency table
+  escapedSwine <- escapedSwine %>% 
+    group_by( larva ) %>% 
+    tally %>% 
+    select( larva, Freq=n ) 
   return( escapedSwine )
 }
 
@@ -193,9 +203,13 @@ remove.zeros <- function( part, cooked ){
 ####
 sampleNM <- function( m, p, n ){
   w <- rgamma( n, shape=m, rate=p[1] )
-  result <- matrix( 0, nrow = n, ncol=length( p )-1 )
+  result <- tibble( shoulder=numeric(n), 
+                    belly=numeric(n),
+                    loin=numeric(n),
+                    ham=numeric(n),
+                    other=numeric(n))
   for( i in 1:n )
-    result[i,] <- rpois( (length(p)-1) , lambda=p[-1]*w[i] )
+    result[i,] <- t( rpois( (length(p)-1) , lambda=p[-1]*w[i] ) )
   return( result )
 }
 
@@ -218,87 +232,17 @@ dose.response <- function( ab, d, r )
 # Infection status list of swine  #
 ########################################
 infec.stat.swine <- function(m, k, nSwine, swine_per_pool, propDiaphragm, sim_max, alpha, beta){
-  larvae.dia <- list()
-  
-  for( i in 1:sim_max ){  
-    escapedSwine <- sim.swine( m, k, nSwine, swine_per_pool, propDiaphragm, alpha, beta)
-    
-    if( nrow( escapedSwine )==0 ){
-      larvae.dia[[i]] <- data.frame(larva=NA, Freq=NA)
-    }else{
-      larvae.dia[[i]] <- escapedSwine
-    }
-  }
   # number of larvae of false negative carcasses
   # larva=larvaInHunderdGrams of diaphragma 
   # freq in how many swine the number of larvae occur
-  return(larvae.dia)
+  
+  larvae.dia <- map_dfr( 1:sim_max, 
+           function(x){
+             sim.swine( m, k, nSwine, swine_per_pool, propDiaphragm, alpha, beta) %>% 
+              mutate( iteration=x) })
 }
 
-########################################
-# Meat preparation and consumption
-########################################
-prep.consumption <- function(larvae.sim, w, p, ab, r, shoulder, belly, lion, ham, n.nzeros){
-  
-  ############################################
-  # Make portions          #
-  ############################################
-  
-  # next two lines proportionally pick a row
-  # sets thresholed for how often learvea are found (independent how many larvae were found)
-  smp <- sample.int(n.nzeros, 1 ) # n.nzeros= max(larvae$cs) right?
-  row <- which( larvae.sim$cs >= smp )[1]
-  
-  # Make a realisation of division of larva over muscle groups,
-  # to be interpreteted as total, i.e. per w[i] portions.
-  
-  sampleNM.res <- sampleNM( n=1, p=p, m=larvae.sim$larva[row]*w[1] ) # w[1] =w$diaphragma
-  colnames(sampleNM.res) <- c('shoulder', 'belly','loin','ham', 'other') # =names(p)[-1]
-  
-  ############################################
-  # Make portions (per muscle group)         #
-  ############################################
-  #in order this is 1 diaphragm, 2 shoulder, 3 belly,4 loin,5 ham, 6 other
-  
-  # shoulder$x <- rmultinom(1, sampleNM.res[2], rep(1/w[2], w[2]))
-  # belly$x    <- rmultinom(1, sampleNM.res[3], rep(1/w[3], w[3]))
-  # loin$x     <- rmultinom(1, sampleNM.res[4], rep(1/w[4], w[4]))
-  # ham$x      <- rmultinom(1, sampleNM.res[5], rep(1/w[5], w[5]))
-  shoulder$x <- rmultinom(1, sampleNM.res[,'shoulder'], rep(1/w[['shoulder']], w[['shoulder']]))
-  belly$x    <- rmultinom(1, sampleNM.res[,'belly'], rep(1/w[['belly']], w[['belly']]))
-  loin$x     <- rmultinom(1, sampleNM.res[,'loin'], rep(1/w[['loin']], w[['loin']]))
-  ham$x      <- rmultinom(1, sampleNM.res[,'ham'], rep(1/w[['ham']], w[['ham']]))
-  
-  shoulder   <- remove.zeros( shoulder, cooked=F )
-  loin       <- remove.zeros( loin, cooked=F )
-  belly      <- remove.zeros( belly, cooked=F )
-  ham        <- remove.zeros( ham, cooked=F )
-  
-  ############################################
-  # Cook the portions                        #
-  ############################################
-  
-  shoulder <- cook( shoulder ) # For convenience, the cooking includes removal of zeros
-  loin     <- cook( loin )
-  belly    <- cook( belly )
-  ham      <- cook( ham ) 
-  
-  ############################################
-  # dose-resp                                #
-  ############################################
-  shoulder$ill <- c( shoulder$ill, dose.response(ab=ab, d=shoulder$x, r=r) )
-  loin$ill     <- c( loin$ill, dose.response(ab=ab, d=loin$x, r=r) )
-  belly$ill    <- c( belly$ill, dose.response(ab=ab, d=belly$x, r=r) )
-  ham$ill      <- c( ham$ill, dose.response(ab=ab, d=ham$x, r=r) )
-  
-  #output
-  output <- list( shoulder=shoulder,
-                  loin=loin,
-                  belly=belly,
-                  ham=ham
-  )
-  return(output)
-}
+
 
 #----------------------------------------------
 # define parameters 
@@ -328,20 +272,22 @@ table.res <- data.frame(n.portions = numeric(0),
 #----------------------------------------------
 # Run simulations 
 #----------------------------------------------
+ab <- read.csv( file = ab_filename, header=F,colClasses=c("numeric","numeric") )
 larvae.dia <- infec.stat.swine(m=m, k=k, nSwine, swine_per_pool=swine_per_pool, 
                                propDiaphragm= propDiaphragm, sim_max= sim_max, 
                                alpha = alpha, beta=beta)
-n.sim   <- length( larvae.dia ) # Number of simulations
 
-for( larvae.sim in larvae.dia )
+for( i in 1:sim_max )
 { 
-  if( nrow( larvae.sim) > 1 )
+  larvae.sim <- larvae.dia %>% filter( iteration==i )
+  
+  if( !is.na(larvae.sim[1,"larva"]) )
   {
-    
-    n.zeros   <- larvae.sim$Freq[1]            # Number of negative carcasses, from false negative carcasses
-    larvae.sim    <- larvae.sim[-1, ]              # Row with zeros not needed any more.
-    larvae.sim$cs <- cumsum(larvae.sim$Freq)       # Precalculate for later
-    n.nzeros  <- larvae.sim$cs[length(larvae.sim$cs)] # How often were larvae found? => n.nzeros-times
+    n.zeros       <- larvae.sim %>% filter( larva==0 ) %>% pull( Freq )
+    larvae.sim    <- larvae.sim %>% slice(-1)              # Row with zeros not needed any more.
+    n.nzeros      <- larvae.sim %>% 
+      summarize( n=sum(Freq) ) %>% 
+      pull(n) # How often were larvae found? => n.nzeros-times
     
     ############################################
     # Calculate total larvae in muscle groups (over all carcasses. #
@@ -352,27 +298,74 @@ for( larvae.sim in larvae.dia )
     belly    <- list( x=numeric(0), ill=numeric(0), zeros=0, zeros.after.cooking=0 )
     ham      <- list( x=numeric(0), ill=numeric(0), zeros=0, zeros.after.cooking=0 )
     
+    
+    ##########################
+    # Distribute over parts  #
+    ##########################
+    
+    # Make a realisation of division of larva over muscle groups,
+    # to be interpreteted as total, i.e. per n_portions_per_part[i] portions.
+    
+    df_larvae_in_parts <- larvae.sim %>% 
+      slice_sample( n=nCarc, weight_by = Freq, replace=TRUE ) %>% 
+      pull( larva ) %>% 
+      map_dfr( .f = ~sampleNM( n=1, p=p, m=.x * n_portions_per_part[['diaphragm']] ) ) %>% 
+      mutate( carcass = 1:n() )
+    
+    
     for( i in 1:nCarc )
     {
-      consumer.res <- prep.consumption(larvae.sim = larvae.sim, n.nzeros=n.nzeros, w = w, p = p, ab = ab, r=r, shoulder=shoulder, belly=belly, lion=lion, ham=ham ) 
-      shoulder <- consumer.res$shoulder
-      loin     <- consumer.res$loin
-      belly    <- consumer.res$belly
-      ham      <- consumer.res$ham
+      
+      ############################################
+      # Make portions (per muscle group)         #
+      ############################################
+      # map( df_larvae_in_parts$shoulder, ~tibble( larva_portion=rmultinom(n=1, size=.x, 
+      #                                                                    prob=rep(1/n_portions_per_part[['shoulder']], 
+      #                                                                             n_portions_per_part[['shoulder']]))[[1]],
+      #                                            portion = 1:n_portions_per_part[['shoulder']] ) )
+      # 
+      
+      shoulder$x <- rmultinom(1, df_larvae_in_parts[[i,'shoulder']], rep(1/n_portions_per_part[['shoulder']], n_portions_per_part[['shoulder']]))
+      belly$x    <- rmultinom(1, df_larvae_in_parts[[i,'belly']], rep(1/n_portions_per_part[['belly']], n_portions_per_part[['belly']]))
+      loin$x     <- rmultinom(1, df_larvae_in_parts[[i,'loin']], rep(1/n_portions_per_part[['loin']], n_portions_per_part[['loin']]))
+      ham$x      <- rmultinom(1, df_larvae_in_parts[[i,'ham']], rep(1/n_portions_per_part[['ham']], n_portions_per_part[['ham']]))
+      
+      shoulder   <- remove.zeros( shoulder, cooked=F )
+      loin       <- remove.zeros( loin, cooked=F )
+      belly      <- remove.zeros( belly, cooked=F )
+      ham        <- remove.zeros( ham, cooked=F )
+      
+      ############################################
+      # Cook the portions                        #
+      ############################################
+      
+      shoulder <- cook( shoulder ) # For convenience, the cooking includes removal of zeros
+      loin     <- cook( loin )
+      belly    <- cook( belly )
+      ham      <- cook( ham ) 
+      
+      ############################################
+      # dose-resp                                #
+      ############################################
+      shoulder$ill <- c( shoulder$ill, dose.response(ab=ab, d=shoulder$x, r=r) )
+      loin$ill     <- c( loin$ill, dose.response(ab=ab, d=loin$x, r=r) )
+      belly$ill    <- c( belly$ill, dose.response(ab=ab, d=belly$x, r=r) )
+      ham$ill      <- c( ham$ill, dose.response(ab=ab, d=ham$x, r=r) )
+      
     }
     
     swine.table <- add.to.swine.table( swine.table, nSwine=nSwine, n.zeros=n.zeros, n.nzeros=n.nzeros )
     
-    table.res <- add.to.table( table.res, nCarc, w, n.nzeros/nSwine, shoulder, belly, loin )
+    table.res <- add.to.table( table.res, nCarc, n_portions_per_part, n.nzeros/nSwine, shoulder, belly, loin )
   } 
   else 
   { #no false negative batches this year
     swine.table <- add.to.swine.table( swine.table, nSwine, n.zeros=0, n.nzeros=0 )
     
-    shoulder <- list( zeros = nCarc * w[2], zeros.after.cooking=0, ill=0 )
-    belly <- list( zeros = nCarc * w[3], zeros.after.cooking=0, ill=0 )
-    loin <- list( zeros = nCarc * w[4], zeros.after.cooking=0, ill=0 )
-    table.res <- add.to.table( table.res, nCarc, w, p.swine=0, shoulder, belly, loin )
+    shoulder <- list( zeros = nCarc * n_portions_per_part[['shoulder']], zeros.after.cooking=0, ill=0 )
+    belly <- list( zeros = nCarc * n_portions_per_part[['belly']], zeros.after.cooking=0, ill=0 )
+    loin <- list( zeros = nCarc * n_portions_per_part[['loin']], zeros.after.cooking=0, ill=0 )
+    table.res <- add.to.table( table.res, nCarc, n_portions_per_part, p.swine=0, shoulder, belly, loin )
   }
   
 }

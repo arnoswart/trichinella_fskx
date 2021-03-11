@@ -10,6 +10,11 @@ nSwine <- 114395672
 swine_per_pool <- 100
 sim_max <- 1000
 r <- 0.7
-w <- c(2, 35, 54, 144, 121, 48 )
+n_portions_per_part <- tibble(  diaphragm=2,
+                                shoulder =35,
+                                belly    =54, 
+                                loin     =144, 
+                                ham      =121, 
+                                other    =48)
 p <- c(0.01103, 0.05903, 0.16183, 0.11588, 0.13571, 0.51652 )
 n_portions_per_person <- 246
