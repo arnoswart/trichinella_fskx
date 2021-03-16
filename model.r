@@ -142,14 +142,10 @@ inactivation_new <- function(I0, T0,T1, t1){
 }
 
 cook <- function( part ){
-  is.welldone <- rbinom( length( part$x ), 1, 0.9 )
-  
-  cooked.rare   <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, I0=part$x, T0=20,T1=54, t1=2.5 ) )
-  cooked.welldone <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, I0=cooked.rare, T0=54,T1=76.7, t1=7.5 ) )
-  cooked.medium   <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, I0=cooked.rare, T0=54,T1=63, t1=1.5 ) )
+
   
   ### Medium, USDA, 4 minutes cooking + 3 minutes rest ###
-  cooked.medium <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3,I0=cooked.medium, T0=63,T1=62.9, t1=3 ) )
+  #cooked.medium <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3,I0=cooked.medium, T0=63,T1=62.9, t1=3 ) )
   
   ### Well done USDA ###
   # cooked.welldone <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3,I0=cooked.rare, T0=54,T1=71, t1=6.5 ) )
@@ -167,7 +163,7 @@ cook <- function( part ){
   # cooked.welldone <- round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3,I0=cooked.welldone, T0=54,T1=75, t1=2 ) )
   
   # Proportion welldone, proportion medium
-  part$x <- is.welldone * cooked.welldone + (1-is.welldone) * cooked.medium
+  
   
   # All medium
   # part$x <- cooked.medium
@@ -176,7 +172,7 @@ cook <- function( part ){
   # With resting
   # part$x <- cooked.medium.rest
   
-  part <- remove.zeros( part, cooked=T)
+  
   
   return( part  )
 }
@@ -242,7 +238,14 @@ infec.stat.swine <- function(m, k, nSwine, swine_per_pool, propDiaphragm, sim_ma
               mutate( iteration=x) })
 }
 
-
+my_rmultinom <- function( larvae_per_part, portions_per_part,...){
+  return( cbind(...,
+                larvae_per_part,
+                portions_per_part,
+                tibble( portion=1:portions_per_part,
+                        larvae_per_portion=rmultinom(1, larvae_per_part, 
+                                                     rep(1/portions_per_part, portions_per_part))[,1])))
+}
 
 #----------------------------------------------
 # define parameters 
@@ -303,47 +306,59 @@ for( i in 1:sim_max )
     # Distribute over parts  #
     ##########################
     
-    # Make a realisation of division of larva over muscle groups,
-    # to be interpreteted as total, i.e. per n_portions_per_part[i] portions.
-    
     df_larvae_in_parts <- larvae.sim %>% 
       slice_sample( n=nCarc, weight_by = Freq, replace=TRUE ) %>% 
       pull( larva ) %>% 
       map_dfr( .f = ~sampleNM( n=1, p=p, m=.x * n_portions_per_part[['diaphragm']] ) ) %>% 
       mutate( carcass = 1:n() )
     
+    # Divide larvae over portions
     
+    df_larvae_in_portions <- df_larvae_in_parts %>% 
+      pivot_longer( -carcass, names_to="part", values_to="larvae_per_part" ) %>% 
+      left_join( 
+        n_portions_per_part %>% 
+          pivot_longer( everything(), names_to="part", values_to="portions_per_part" )) %>% 
+      pmap_dfr( my_rmultinom )
+      
+    # Remove zero larvae rows, but remember how many
+    df_zero_larvae_in_portions <- df_larvae_in_portions %>% 
+      group_by( part ) %>% 
+      summarize( n_zeros = sum(larvae_per_portion==0))
+    
+    df_larvae_in_portions <- df_larvae_in_portions %>% 
+      filter( larvae_per_portion != 0 )
+    
+    ############################################
+    # Cook the portions                        #
+    ############################################
+    
+    # First everything is cooked rare
+    # Then it continues to either well done or medium
+    # TODO: make nice scenarios for the cooking styles to replace the fixed numbers below
+    # TODO: plugin new inactivation model
+    df_larvae_in_portions <- df_larvae_in_portions %>% 
+      mutate( is_welldone = rbinom( n(), 1, p_welldone ),
+              larvae_rare = round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, 
+                                                 I0=larvae_per_portion,T0=20,T1=54, t1=2.5 ) ),
+              larvae_welldone = round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, 
+                                                     I0=larvae_rare, T0=54,T1=76.7, t1=15 ) ),
+              larvae_medium   = round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, 
+                                                     I0=larvae_rare, T0=54,T1=63, t1=1.5 ) ),
+              larvae_after_cooking = ifelse(is_welldone, larvae_welldone, larvae_medium ) )
+    
+    # Remove zero larvae rows, but remember how many
+    df_zero_larvae_in_portions <- left_join( 
+      df_zero_larvae_in_portions,
+      df_larvae_in_portions %>% 
+        group_by( part ) %>% 
+        summarize( n_zeros_after_cooking = sum(larvae_after_cooking==0)), by="part")
+    
+    df_larvae_in_portions <- df_larvae_in_portions %>% 
+      filter( larvae_after_cooking != 0 )
+  
     for( i in 1:nCarc )
     {
-      
-      ############################################
-      # Make portions (per muscle group)         #
-      ############################################
-      # map( df_larvae_in_parts$shoulder, ~tibble( larva_portion=rmultinom(n=1, size=.x, 
-      #                                                                    prob=rep(1/n_portions_per_part[['shoulder']], 
-      #                                                                             n_portions_per_part[['shoulder']]))[[1]],
-      #                                            portion = 1:n_portions_per_part[['shoulder']] ) )
-      # 
-      
-      shoulder$x <- rmultinom(1, df_larvae_in_parts[[i,'shoulder']], rep(1/n_portions_per_part[['shoulder']], n_portions_per_part[['shoulder']]))
-      belly$x    <- rmultinom(1, df_larvae_in_parts[[i,'belly']], rep(1/n_portions_per_part[['belly']], n_portions_per_part[['belly']]))
-      loin$x     <- rmultinom(1, df_larvae_in_parts[[i,'loin']], rep(1/n_portions_per_part[['loin']], n_portions_per_part[['loin']]))
-      ham$x      <- rmultinom(1, df_larvae_in_parts[[i,'ham']], rep(1/n_portions_per_part[['ham']], n_portions_per_part[['ham']]))
-      
-      shoulder   <- remove.zeros( shoulder, cooked=F )
-      loin       <- remove.zeros( loin, cooked=F )
-      belly      <- remove.zeros( belly, cooked=F )
-      ham        <- remove.zeros( ham, cooked=F )
-      
-      ############################################
-      # Cook the portions                        #
-      ############################################
-      
-      shoulder <- cook( shoulder ) # For convenience, the cooking includes removal of zeros
-      loin     <- cook( loin )
-      belly    <- cook( belly )
-      ham      <- cook( ham ) 
-      
       ############################################
       # dose-resp                                #
       ############################################
@@ -351,7 +366,6 @@ for( i in 1:sim_max )
       loin$ill     <- c( loin$ill, dose.response(ab=ab, d=loin$x, r=r) )
       belly$ill    <- c( belly$ill, dose.response(ab=ab, d=belly$x, r=r) )
       ham$ill      <- c( ham$ill, dose.response(ab=ab, d=ham$x, r=r) )
-      
     }
     
     swine.table <- add.to.swine.table( swine.table, nSwine=nSwine, n.zeros=n.zeros, n.nzeros=n.nzeros )

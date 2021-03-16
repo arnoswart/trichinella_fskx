@@ -16,5 +16,7 @@ n_portions_per_part <- tibble(  diaphragm=2,
                                 loin     =144, 
                                 ham      =121, 
                                 other    =48)
+p_welldone <- 0.9
+
 p <- c(0.01103, 0.05903, 0.16183, 0.11588, 0.13571, 0.51652 )
 n_portions_per_person <- 246

@@ -15,6 +15,8 @@ n_portions_per_part <- tibble(  diaphragm=2,
                                 loin     =144, 
                                 ham      =121, 
                                 other    =48)
+p_welldone <- 0.9
+
 alpha <- 1.53575 
 sim_max <- 50
 swine_per_pool <- 100
