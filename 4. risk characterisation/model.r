@@ -23,5 +23,10 @@ df_summary <-
              p_ill_given_exposure = mean(p_ill ),
              .groups="drop" ) %>% 
   mutate( p_exposure = 1-n_portions_zero/n_portions_total,
-          p_ill = p_ill_given_exposure * p_exposure ) %>% 
-  left_join( swine.table )
+          p_ill = p_ill_given_exposure * p_exposure,
+          n_portions_nonzero = n_portions_total-n_portions_zero ) %>% 
+  left_join( swine.table %>% 
+               select( simulation, 
+                       p_falseneg_batch=p.falseneg,
+                       p_positive_carc=p.carc) )
+

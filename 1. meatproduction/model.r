@@ -46,6 +46,7 @@ larvae.dia <- infec.stat.swine(m=m, k=k, nSwine, swine_per_pool=swine_per_pool,
 
 for( i in 1:sim_max )
 { 
+  # How many larvae were found in each simulation
   larvae.sim <- larvae.dia %>% filter( iteration==i )
   
   if( !is.na(larvae.sim[1,"larva"]) )
