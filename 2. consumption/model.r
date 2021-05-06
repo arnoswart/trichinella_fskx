@@ -12,38 +12,11 @@
 #----------------------------------------------
 library( tidyverse )
 
-#----------------------------------------------
-# functions
-#----------------------------------------------
-
-inactivation <- function( k, alpha.plus, T.star, I0, T0,T1, t1 ){
-  I0*((exp(k*T.star) + exp( k * T1 ))/(exp(k*T.star) +exp( k * T0 )))^(alpha.plus * t1 /( k*(T0-T1)))                                                                                          
-}
-
-# New inactivation function
-inactivation_new <- function(I0, T0,T1, t1){
-  # just using the final temperature for now.
-  # later better do a piecewise linear approximation between T0 and T1
-  temp = T1
-  p_surv = -1.38e3 + 8.56*t1 + 1.09e1*temp - 4.06e-2*t1*temp +8.31e2*log(t1) +
-            2.94e2*log(temp) -2.53e2*log(t1)*log(temp)
-  return( I0*(1-p_surv) )
-}
-
-my_rmultinom <- function( larvae_per_part, portions_per_part,...){
-  return( cbind(...,
-                larvae_per_part,
-                portions_per_part,
-                tibble( portion=1:portions_per_part,
-                        larvae_per_portion=rmultinom(1, larvae_per_part, 
-                                                     rep(1/portions_per_part, portions_per_part))[,1])))
-}
-
+source("functions.R" )
 
 #----------------------------------------------
 # Run simulations 
 #----------------------------------------------
-
 
 ###############################
 # Divide larvae over portions #
@@ -53,13 +26,14 @@ df_larvae_in_portions <- df_larvae_in_parts %>%
   pivot_longer( -c(carcass, simulation), names_to="part", values_to="larvae_per_part" ) %>% 
   left_join( 
     n_portions_per_part %>% 
-      pivot_longer( everything(), names_to="part", values_to="portions_per_part" )) %>% 
+      pivot_longer( everything(), names_to="part", values_to="portions_per_part" ),
+    by="part" ) %>% 
   pmap_dfr( my_rmultinom )
   
 # Remove zero larvae rows, but remember how many
 df_zero_larvae_in_portions <- df_larvae_in_portions %>% 
   group_by( part, simulation, carcass ) %>% 
-  summarize( n_zeros = sum(larvae_per_portion==0))
+  summarize( n_zeros = sum(larvae_per_portion==0), .groups="drop")
 
 df_larvae_in_portions <- df_larvae_in_portions %>% 
   filter( larvae_per_portion != 0 )
@@ -87,7 +61,8 @@ df_zero_larvae_in_portions <- left_join(
   df_zero_larvae_in_portions,
   df_larvae_in_portions %>% 
     group_by( part, simulation, carcass ) %>% 
-    summarize( n_zeros_after_cooking = sum(larvae_after_cooking==0), .groups="drop"), by="part")
+    summarize( n_zeros_after_cooking = sum(larvae_after_cooking==0), .groups="drop"), 
+  by=c("part", "carcass", "simulation") )
 
 df_larvae_in_portions <- df_larvae_in_portions %>% 
   filter( larvae_after_cooking != 0 )

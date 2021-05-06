@@ -1,4 +1,5 @@
 library( here )
+library( tidyverse )
 
 rm( list=ls() )
 
@@ -14,3 +15,5 @@ setwd( here("3. doseresponse") )
 source( "./simulations/defaultSimulation.r")
 source( "model.r")
 
+setwd( here("4. risk characterisation") )
+source( "./simulations/defaultSimulation.r")
