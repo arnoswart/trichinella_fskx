@@ -11,9 +11,15 @@ setwd( here("2. consumption") )
 source( "./simulations/defaultSimulation.r")
 source( "model.r")
 
-setwd( here("3. doseresponse") )
+setwd( here("3. cooking") )
 source( "./simulations/defaultSimulation.r")
 source( "model.r")
 
-setwd( here("4. risk characterisation") )
+setwd( here("4. doseresponse") )
 source( "./simulations/defaultSimulation.r")
+source( "model.r")
+
+setwd( here("5. risk characterisation") )
+source( "./simulations/defaultSimulation.r")
+source( "model.r")
+

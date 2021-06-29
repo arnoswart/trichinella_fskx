@@ -47,25 +47,7 @@ df_larvae_in_portions <- df_larvae_in_portions %>%
 # TODO: make nice scenarios for the cooking styles to replace the fixed numbers below
 # TODO: plugin new inactivation model
 df_larvae_in_portions <- df_larvae_in_portions %>% 
-  mutate( is_welldone = rbinom( n(), 1, p_welldone ),
-          larvae_rare = round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, 
-                                             I0=larvae_per_portion,T0=20,T1=54, t1=2.5 ) ),
-          larvae_welldone = round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, 
-                                                 I0=larvae_rare, T0=54,T1=76.7, t1=15 ) ),
-          larvae_medium   = round( inactivation( k=0.17, alpha.plus=0.63, T.star=59.3, 
-                                                 I0=larvae_rare, T0=54,T1=63, t1=1.5 ) ),
-          larvae_after_cooking = ifelse(is_welldone, larvae_welldone, larvae_medium ) )
-
-# Remove zero larvae rows, but remember how many
-df_zero_larvae_in_portions <- left_join( 
-  df_zero_larvae_in_portions,
-  df_larvae_in_portions %>% 
-    group_by( part, simulation, carcass ) %>% 
-    summarize( n_zeros_after_cooking = sum(larvae_after_cooking==0), .groups="drop"), 
-  by=c("part", "carcass", "simulation") )
-
-df_larvae_in_portions <- df_larvae_in_portions %>% 
-  filter( larvae_after_cooking != 0 )
+  mutate( is_welldone = rbinom( n(), 1, p_welldone ))
 
 # Remove all we don't need
 toremove <- grep("^df_larvae_in_portions$|^swine.table$|df_zero_larvae_in_portions", ls(), 
