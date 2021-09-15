@@ -15,7 +15,7 @@ library( tidyverse )
 # This is only for swine batches with 'escaped swine'
 df_summary <- 
   df_larvae_in_portions %>% 
-  left_join( df_zero_larvae_in_portions ) %>% 
+  left_join( df_zero_larvae_in_portions, by = c("carcass", "simulation", "part") ) %>% 
   unique() %>% 
   group_by( part, simulation ) %>% 
   summarise( n_portions_total = first( portions_per_part),
@@ -28,5 +28,6 @@ df_summary <-
   left_join( swine.table %>% 
                select( simulation, 
                        p_falseneg_batch=p.falseneg,
-                       p_positive_carc=p.carc) )
+                       p_positive_carc=p.carc),
+             by="simulation")
 

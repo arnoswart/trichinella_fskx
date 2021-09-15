@@ -22,4 +22,4 @@ source( "model.r")
 setwd( here("5. risk characterisation") )
 source( "./simulations/defaultSimulation.r")
 source( "model.r")
-
+source( "visualization.r")

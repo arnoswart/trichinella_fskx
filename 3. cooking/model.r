@@ -43,11 +43,12 @@ df_zero_larvae_in_portions <- left_join(
   df_zero_larvae_in_portions,
   df_larvae_in_portions %>% 
     group_by( part, simulation, carcass ) %>% 
-    summarize( n_zeros_after_cooking = sum(larvae_after_cooking==0), .groups="drop"), 
-  by=c("part", "carcass", "simulation") )
+    summarize( n_zeros_after_cooking = sum(larvae_after_cooking<=1), .groups="drop") , 
+  by=c("part", "carcass", "simulation") ) %>% 
+  mutate( n_zeros_after_cooking = coalesce( n_zeros_after_cooking, n_zeros ) )
 
 df_larvae_in_portions <- df_larvae_in_portions %>% 
-  filter( larvae_after_cooking != 0 )
+  filter( larvae_after_cooking > 1 )
 
 # Remove all we don't need
 toremove <- grep("^df_larvae_in_portions$|^swine.table$|df_zero_larvae_in_portions", ls(), 

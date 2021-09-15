@@ -30,13 +30,13 @@ df_larvae_in_portions <- df_larvae_in_parts %>%
     by="part" ) %>% 
   pmap_dfr( my_rmultinom )
   
-# Remove zero larvae rows, but remember how many
+# Remove zero or one larvae rows (they pose no risk), but remember how many
 df_zero_larvae_in_portions <- df_larvae_in_portions %>% 
   group_by( part, simulation, carcass ) %>% 
-  summarize( n_zeros = sum(larvae_per_portion==0), .groups="drop")
+  summarize( n_zeros = sum(larvae_per_portion<=1), .groups="drop")
 
 df_larvae_in_portions <- df_larvae_in_portions %>% 
-  filter( larvae_per_portion != 0 )
+  filter( larvae_per_portion >1 )
 
 ############################################
 # Cook the portions                        #
