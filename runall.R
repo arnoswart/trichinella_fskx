@@ -12,12 +12,12 @@ setwd( here("2. consumption") )
 source( "./simulations/defaultSimulation.r")
 source( "model.r")
 
-
 #setwd( here("3A. cooking old model") )
 setwd( here("3B. cooking new model") )
 
 source( "./simulations/defaultSimulation.r")
 source( "model.r")
+source( "visualisation.r")
 
 setwd( here("4. doseresponse") )
 source( "./simulations/defaultSimulation.r")
