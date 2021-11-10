@@ -1,18 +1,12 @@
-inactivation.parameter <- 0.17
-alpha.plus             <- 0.63
-T.star                 <- 59.3
-
-# Rare part
-rare.start.temp <- 20
-rare.end.temp   <- 54
-rare.end.time   <- 2.5
-
-# Well done
-welldone.start.temp <- rare.end.temp
-welldone.end.temp   <- 76.7
-welldone.end.time   <- 15
-
-# Medium done
-medium.start.temp <- rare.end.temp
-medium.end.temp   <- 63
-medium.end.time   <- 1.5
+df_larvae_in_portions_afterConsump_join <- " "
+df_zero_larvae_in_portions_afterConsump_join <- " "
+inactivation_parameter <- 0.17
+alpha_plus <- 0.63
+T_star <- 59.3
+rare_start_temp <- 20
+rare_end_temp <- 54
+rare_end_time <- 2.5
+welldone_end_temp <- 76.7
+welldone_end_time <- 15
+medium_end_temp <- 63
+medium_end_time <- 1.5
