@@ -1,5 +1,5 @@
 #----------------------------------------------
-# functions
+# functions  
 #----------------------------------------------
 
 add.to.swine.table <- function( swine.table, i, nSwine, n.zeros, n.nzeros ){

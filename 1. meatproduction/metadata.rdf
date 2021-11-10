@@ -6,7 +6,7 @@
   <rdf:Description rdf:about="/visualization.r">
     <dc:type xmlns:dc="http://purl.org/dc/elements/1.1/">visualizationScript</dc:type>
   </rdf:Description>
-  <rdf:Description rdf:about="/workspace.r">
+  <rdf:Description rdf:about="/workspace.RData">
     <dc:type xmlns:dc="http://purl.org/dc/elements/1.1/">workspace</dc:type>
   </rdf:Description>
   <rdf:Description rdf:about="/model.r">
