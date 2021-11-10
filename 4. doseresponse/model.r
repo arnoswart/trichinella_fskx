@@ -1,35 +1,37 @@
-#----------------------------------------------
-# Reference and info
-#----------------------------------------------
-# The mathematical model is published in Frits Franssen, Arno Swart, Joke van der Giessen, Arie Havelaar, Katsuhisa Takumi, 
-# Parasite to patient: A quantitative risk model for Trichinella spp. in pork and wild boar meat, 
-# International Journal of Food Microbiology, Volume 241, 2017, Pages 262-275, ISSN 0168-1605.
+library(tidyverse)
+library(magrittr)
+library(rapportools)
+library(dplyr)
 
-# Trichinella muscle larvae (ML)
 
-#----------------------------------------------
-# library
-#----------------------------------------------
-library( tidyverse )
+if(is.empty(df_larvae_in_portions_afterCook_join)){
+  df_larvae_in_portions <- read.csv(file = "df_larvae_in_portions_afterCook.csv")
+} else {
+  df_larvae_in_portions <- read.csv(file = df_larvae_in_portions_afterCook_join)
+}
+
 
 dose.response <- function( p_surv, d, r )
 {
- 1 + exp( d *log(1-p_surv) ) - 
-                exp(d*log(1-r*p_surv))- 
-                exp(d*log(1-(1-r)*p_surv))
+  1 + exp( d *log(1-p_surv) ) - 
+    exp(d*log(1-r*p_surv))- 
+    exp(d*log(1-(1-r)*p_surv))
 }
 
-p_surv <- read.csv( file = ab_filename, header=F,
-                colClasses=c("numeric","numeric") ) %>% 
+p_surv <- read.csv( file = ab, header=F,
+                    colClasses=c("numeric","numeric") ) %>% 
   setNames( c("a", "b") ) %>% 
-  mutate( p_surv = rbeta( n=n(), shape1=a, shape2=b )) %>% 
+  mutate( p_surv = rbeta( n=dplyr::n(), shape1=a, shape2=b )) %>% 
   pull( p_surv )
 
 ############################################
 # dose-resp                                #
 ############################################
-df_larvae_in_portions <- df_larvae_in_portions %>%
-  mutate( p_surv_larva = sample( p_surv, n(), replace=TRUE) ) %>% 
+df_larvae_in_portions_afterDR <- df_larvae_in_portions %>%
+  mutate( p_surv_larva = sample( p_surv, dplyr::n(), replace=TRUE) ) %>% 
   mutate( p_ill = dose.response( p_surv_larva, larvae_after_cooking, r ) )
 
-rm( list=c("ab_filename", "p_surv", "r", "dose.response"))
+
+df_larvae_in_portions_afterDR_file <- "df_larvae_in_portions_DR.csv"
+write.csv(df_larvae_in_portions_afterDR, file = df_larvae_in_portions_afterDR_file, row.names = FALSE)
+
