@@ -1,9 +1,6 @@
 library(patchwork)
 library(ggplot2)
 
-#par(mar=c(7,4.1,2,2.1))
-#par(mfrow=c(1,2))
-
 p <- (df_summary %>%
         select( starts_with("p_"), part ) %>% 
         pivot_longer( -part, names_to="probability", values_to="value") %>% 
@@ -18,3 +15,5 @@ p <- (df_summary %>%
      geom_boxplot( aes( x=part, y=value, fill=count ))) + 
   plot_annotation(
     title = 'Model output fractions and numbers' )
+
+print(p)

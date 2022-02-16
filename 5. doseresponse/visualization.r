@@ -3,7 +3,7 @@ library(ggplot2)
 library(dplyr)
 
 
-(df_larvae_in_portions_afterDR %>% 
+((df_larvae_in_portions_afterDR %>% 
   filter( p_ill > 0 ) %>% 
   ggplot() +
     geom_boxplot( aes(x=part, y=p_ill) ) +
@@ -12,4 +12,5 @@ library(dplyr)
   group_by( part ) %>% 
   summarise( p_ill_zero = sum(p_ill==0)/dplyr::n() ) %>% 
    ggplot( ) +
-   geom_col( aes(x=part,y=p_ill_zero)) )
+   geom_col( aes(x=part,y=p_ill_zero)) )) %>% 
+print()
