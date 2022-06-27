@@ -61,7 +61,6 @@ df_larvae_in_portions <- df_larvae_in_portions %>%
                                                                  inactivation_params ))))
 
 
-
 # Remove zero larvae rows, but remember how many
 df_zero_larvae_in_portions_afterCook <- left_join( 
   df_zero_larvae_in_portions,
@@ -69,11 +68,10 @@ df_zero_larvae_in_portions_afterCook <- left_join(
     group_by( part, simulation, carcass ) %>% 
     summarize( n_zeros_after_cooking = sum(larvae_after_cooking<=1), .groups="drop"), 
   by=c("part", "carcass", "simulation") ) %>% 
-  mutate( n_zeros_after_cooking = coalesce( n_zeros_after_cooking, n_zeros ) )
+  mutate( n_zeros_after_cooking =  n_zeros_after_cooking + n_zeros )
 
 df_larvae_in_portions_afterCook <- df_larvae_in_portions %>% 
   filter( larvae_after_cooking > 1 )
-
 
 df_larvae_in_portions_afterCook_file <- "df_larvae_in_portions_Cook.csv"
 write.csv(df_larvae_in_portions_afterCook, file = df_larvae_in_portions_afterCook_file, row.names = FALSE)
