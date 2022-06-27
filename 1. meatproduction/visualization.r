@@ -1,7 +1,6 @@
-library( patchwork )
-library(ggplot2)
-library(gridExtra)
-library(grid)
+library( ggplot2 )
+library( gridExtra )
+library( grid )
 
 plot_table <- swine_table %>% 
   select( - simulation ) %>%
