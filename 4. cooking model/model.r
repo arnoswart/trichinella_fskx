@@ -1,6 +1,6 @@
 library(tidyverse)
 library(magrittr)
-#library(rapportools)
+library(rapportools) # for is.empty
 library(dplyr)
 
 
@@ -26,12 +26,13 @@ if(is.empty(df_zero_larvae_in_portions_afterConsump_join)){
 # defined in the inactivation model
 eval(parse(text=inactivation ))
 
-
 # First everything is cooked rare
 # Then it continues to either well done or medium
 
 df_larvae_in_portions <- df_larvae_in_portions %>% 
-  mutate( larvae_rare = round(inactivation_func( I0=larvae_per_portion,
+  mutate( is_welldone = rbinom( dplyr::n(), 1, p_welldone ), 
+          part = as.factor(part),
+          larvae_rare = round(inactivation_func( I0=larvae_per_portion,
                                             T0=rare_start_temp,
                                             T1=rare_end_temp, 
                                             t1=rare_end_time,
@@ -46,9 +47,20 @@ df_larvae_in_portions <- df_larvae_in_portions %>%
                                                 T1=medium_end_temp, 
                                                 t1=medium_end_time,
                                                 inactivation_params ) ),
-          larvae_after_cooking = ifelse(is_welldone, larvae_welldone, larvae_medium ) )
+          # Extra cooking time after medium or welldone.
+          larvae_after_cooking = ifelse(is_welldone, 
+                                        round(inactivation_func( I0=larvae_welldone,
+                                                                 T0=welldone_end_temp,
+                                                                 T1=welldone_end_temp,
+                                                                 t1=extra_time,
+                                                                 inactivation_params )),
+                                        round(inactivation_func( I0=larvae_medium,
+                                                                 T0=medium_end_temp,
+                                                                 T1=medium_end_temp,
+                                                                 t1=extra_time,
+                                                                 inactivation_params ))))
 
-df_larvae_in_portions$part <- as.factor(df_larvae_in_portions$part)
+
 
 # Remove zero larvae rows, but remember how many
 df_zero_larvae_in_portions_afterCook <- left_join( 

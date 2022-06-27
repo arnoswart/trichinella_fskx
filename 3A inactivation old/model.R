@@ -10,7 +10,8 @@ inactivation <- 'inactivation_func <- function(  I0, T0,T1, t1, inactivation_par
     T_star <- inactivation_params[["T_star"]]
     alpha_plus <- inactivation_params[["alpha_plus"]]
     
-    I0*((exp(k*T_star) + exp( k * T1 ))/(exp(k*T_star) +
-             exp( k * T0 )))^(alpha_plus * t1 /( k*(T0-T1)))                                                                                          
+    return( ifelse( t1=0, I0,
+                          I0*((exp(k*T_star) + exp( k * T1 ))/(exp(k*T_star) +
+                              exp( k * T0 )))^(alpha_plus * t1 /( k*(T0-T1)))))                                                                                          
 }'
 

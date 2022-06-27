@@ -19,6 +19,6 @@ inactivation <- 'inactivation_func <- function(I0, T0,T1, t1, inactivation_param
       inactivation_params[["a2"]]*temp +
       inactivation_params[["a3"]]*t1*temp)
   
-  return( I0*(1-p_inact) )
+  return( ifelse(t1==0,I0,I0*(1-p_inact) ))
 }'
 

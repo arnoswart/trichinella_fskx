@@ -36,18 +36,9 @@ df_zero_larvae_in_portions_afterConsump <- df_larvae_in_portions %>%
   group_by( part, simulation, carcass ) %>% 
   summarize( n_zeros = sum(larvae_per_portion<=1), .groups="drop")
 
-df_larvae_in_portions <- df_larvae_in_portions %>% 
+df_larvae_in_portions_afterConsump <- df_larvae_in_portions %>% 
   filter( larvae_per_portion > 1 )
 
-############################################
-# Cook the portions                        #
-############################################
-
-# First everything is cooked rare
-# Then it continues to either well done or medium
-
-df_larvae_in_portions_afterConsump <- df_larvae_in_portions %>% 
-  mutate( is_welldone = rbinom( dplyr::n(), 1, p_welldone ))
 
 df_larvae_in_portions_afterConsump_file <- "df_larvae_in_portions_Cons.csv"
 write.csv(df_larvae_in_portions_afterConsump, file = df_larvae_in_portions_afterConsump_file, row.names = FALSE)
