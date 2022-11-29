@@ -1,83 +1,57 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" xmlns:fsk="https://foodrisklabs.bfr.bund.de/wp-content/uploads/2017/01/FSK-ML_guidance_document_021216.pdf" level="3" version="1">
+<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1" xmlns:fsk="https://foodrisklabs.bfr.bund.de/wp-content/uploads/2017/01/FSK-ML_guidance_document_021216.pdf">
   <model id="model">
     <listOfParameters>
-      <parameter name="ab" constant="false" id="ab">
+      <parameter constant="false" id="df_larvae_in_parts_join" name="df_larvae_in_parts">
         <annotation>
-  <fsk:parameter value="read.csv( file = 'trich-ab.csv', header=F,colClasses=c(&quot;numeric&quot;,&quot;numeric&quot;) )"/>
+  <fsk:parameter value="&quot; &quot;"/>
         </annotation>
             </parameter>
-      <parameter name="nCarc" constant="true" id="nCarc">
+      <parameter constant="false" id="p_welldone" name="p_welldone">
         <annotation>
-  <fsk:parameter value="5000"/>
+  <fsk:parameter value="0.9"/>
         </annotation>
             </parameter>
-      <parameter name="pop" constant="true" id="pop">
+      <parameter constant="false" id="diaphragm" name="diaphragm">
         <annotation>
-  <fsk:parameter value="38336743"/>
+  <fsk:parameter value="2"/>
         </annotation>
             </parameter>
-      <parameter name="alpha" constant="false" id="alpha">
+      <parameter constant="false" id="shoulder" name="shoulder">
         <annotation>
-  <fsk:parameter value="1.53575 "/>
+  <fsk:parameter value="35"/>
         </annotation>
             </parameter>
-      <parameter name="beta" constant="false" id="beta">
+      <parameter constant="false" id="belly" name="belly">
         <annotation>
-  <fsk:parameter value="0.289405"/>
+  <fsk:parameter value="54"/>
         </annotation>
             </parameter>
-      <parameter name="m" constant="false" id="m">
+      <parameter constant="false" id="loin" name="loin">
         <annotation>
-  <fsk:parameter value="0.00159125"/>
+  <fsk:parameter value="144"/>
         </annotation>
             </parameter>
-      <parameter name="k" constant="false" id="k">
+      <parameter constant="false" id="ham" name="ham">
         <annotation>
-  <fsk:parameter value="1.3523e-7"/>
+  <fsk:parameter value="121"/>
         </annotation>
             </parameter>
-      <parameter name="propDiaphragm" constant="true" id="propDiaphragm">
+      <parameter constant="false" id="other" name="other">
         <annotation>
-  <fsk:parameter value="0.01"/>
+  <fsk:parameter value="48"/>
         </annotation>
             </parameter>
-      <parameter name="nSwine" constant="false" id="nSwine">
+      <parameter constant="false" id="df_larvae_in_portions_afterConsump_file" name="df_larvae_in_portions_afterConsump">
         <annotation>
-  <fsk:parameter value="114395672"/>
+  <fsk:parameter value="-"/>
         </annotation>
             </parameter>
-      <parameter name="swine_per_pool" constant="false" id="swine_per_pool">
+      <parameter constant="false" id="df_zero_larvae_in_portions_afterConsump_file" name="df_zero_larvae_in_portions_afterConsump">
         <annotation>
-  <fsk:parameter value="100"/>
+  <fsk:parameter value="-"/>
         </annotation>
             </parameter>
-      <parameter name="sim_max" constant="true" id="sim_max">
-        <annotation>
-  <fsk:parameter value="1000"/>
-        </annotation>
-            </parameter>
-      <parameter name="r" constant="false" id="r">
-        <annotation>
-  <fsk:parameter value="0.7"/>
-        </annotation>
-            </parameter>
-      <parameter name="w" constant="false" id="w">
-        <annotation>
-  <fsk:parameter value="c(2, 35, 54, 144, 121, 48 )"/>
-        </annotation>
-            </parameter>
-      <parameter name="p" constant="false" id="p">
-        <annotation>
-  <fsk:parameter value="c(0.01103, 0.05903, 0.16183, 0.11588, 0.13571, 0.51652 )"/>
-        </annotation>
-            </parameter>
-      <parameter name="n_portions_per_person" constant="false" id="n_portions_per_person">
-        <annotation>
-  <fsk:parameter value="246"/>
-        </annotation>
-            </parameter>
-      <parameter name="output" constant="false" id="output"/>
     </listOfParameters>
   </model>
 </sbml>

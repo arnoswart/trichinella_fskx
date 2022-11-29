@@ -1,22 +1,17 @@
-#----------------------------------------------
-# Reference and info
-#----------------------------------------------
-# The mathematical model is published in Frits Franssen, Arno Swart, Joke van der Giessen, Arie Havelaar, Katsuhisa Takumi, 
-# Parasite to patient: A quantitative risk model for Trichinella spp. in pork and wild boar meat, 
-# International Journal of Food Microbiology, Volume 241, 2017, Pages 262-275, ISSN 0168-1605.
+library(tidyverse)
+library(magrittr)
+library(dplyr)
 
-#----------------------------------------------
-# library
-#----------------------------------------------
-library( tidyverse )
+source("functions_meatProduction.r")
 
-source( "functions.R")
-
-#----------------------------------------------
-# define parameters 
-#----------------------------------------------
-
-swine.table <- tibble( 
+n_portions_per_part <- tibble(diaphragm = diaphragm,
+                              shoulder  = shoulder,
+                              belly     = belly, 
+                              loin      = loin, 
+                              ham       = ham, 
+                              other     = other)
+                              
+swine_table <- tibble( 
   simulation=numeric(0),
   nSwine=numeric(0),
   n.falseneg=numeric(0), 
@@ -57,7 +52,7 @@ for( i in 1:sim_max )
       summarize( n=sum(Freq) ) %>% 
       pull(n) # How often were larvae found? => n.nzeros-times
     
-    swine.table <- add.to.swine.table( swine.table, i, nSwine=nSwine, 
+    swine_table <- add.to.swine.table( swine_table, i, nSwine=nSwine, 
                                        n.zeros=n.zeros, n.nzeros=n.nzeros )
     
     #################################
@@ -67,26 +62,28 @@ for( i in 1:sim_max )
     df_larvae_in_parts <- df_larvae_in_parts %>% 
       rbind(
         larvae.sim %>% 
-        slice_sample( n=nCarc, weight_by = Freq, replace=TRUE ) %>% 
-        pull( larva ) %>% 
-        map_dfr( .f = ~sampleNM( n=1, 
-                                 p=p_larva_in_part, 
-                                 m=.x * n_portions_per_part[['diaphragm']] ) ) %>% 
-        mutate( simulation=i, carcass = 1:n() ))
+          slice_sample( n=nCarc, weight_by = Freq, replace=TRUE ) %>% 
+          pull( larva ) %>% 
+          map_dfr( .f = ~sampleNM( n=1, 
+                                   p=p_larvae_in_part, 
+                                   m=.x * n_portions_per_part[['diaphragm']] ) ) %>% 
+          mutate( simulation=i, carcass = 1:dplyr::n() ))
   } else { #no false negative batches this year
     df_larvae_in_parts <-  df_larvae_in_parts %>% 
       rbind(tibble( shoulder=rep(0,nCarc),
-                                  belly=rep(0,nCarc),
-                                  loin=rep(0,nCarc),
-                                  ham=rep(0,nCarc),
-                                  other=rep(0,nCarc),
-                                  carcass=1:nCarc,
-                                  simulation=i ))
-    swine.table <- add.to.swine.table( swine.table, i, nSwine, n.zeros=0, n.nzeros=0 )
+                    belly=rep(0,nCarc),
+                    loin=rep(0,nCarc),
+                    ham=rep(0,nCarc),
+                    other=rep(0,nCarc),
+                    carcass=1:nCarc,
+                    simulation=i ))
+    swine_table <- add.to.swine.table( swine_table, i, nSwine, n.zeros=0, n.nzeros=0 )
   }
 }
 
-# Remove all we don't need
-toremove <- grep("^df_larvae_in_parts$|^swine.table$", ls(), 
-                 invert = TRUE, value = TRUE)
-rm(list = c(toremove, "toremove"))
+
+df_larvae_in_parts_file <- "df_larvae_in_parts_MP.csv"
+write.csv(df_larvae_in_parts, file = df_larvae_in_parts_file, row.names = FALSE)
+
+swine_table_file <- "swine_table_MP.csv"
+write.csv(swine_table, file = swine_table_file, row.names = FALSE)

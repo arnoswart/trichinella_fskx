@@ -1,22 +1,23 @@
-#----------------------------------------------
-# Reference and info
-#----------------------------------------------
-# The mathematical model is published in Frits Franssen, Arno Swart, Joke van der Giessen, Arie Havelaar, Katsuhisa Takumi, 
-# Parasite to patient: A quantitative risk model for Trichinella spp. in pork and wild boar meat, 
-# International Journal of Food Microbiology, Volume 241, 2017, Pages 262-275, ISSN 0168-1605.
+library(tidyverse)
+library(magrittr)
+library(rapportools)
+library(dplyr)
 
-# Trichinella muscle larvae (ML)
+source("functions_consumption.r")
 
-#----------------------------------------------
-# library
-#----------------------------------------------
-library( tidyverse )
+n_portions_per_part <- tibble(diaphragm = diaphragm,
+                              shoulder  = shoulder,
+                              belly     = belly, 
+                              loin      = loin, 
+                              ham       = ham, 
+                              other     = other)
 
-source("functions.R" )
+if(is.empty(df_larvae_in_parts_join)){
+  df_larvae_in_parts <- read.csv(file = "df_larvae_in_parts.csv")
+} else {
+  df_larvae_in_parts <- read.csv(file = df_larvae_in_parts_join)
+}
 
-#----------------------------------------------
-# Run simulations 
-#----------------------------------------------
 
 ###############################
 # Divide larvae over portions #
@@ -29,27 +30,18 @@ df_larvae_in_portions <- df_larvae_in_parts %>%
       pivot_longer( everything(), names_to="part", values_to="portions_per_part" ),
     by="part" ) %>% 
   pmap_dfr( my_rmultinom )
-  
-# Remove zero or one larvae rows (they pose no risk), but remember how many
-df_zero_larvae_in_portions <- df_larvae_in_portions %>% 
+
+# Remove zero larvae rows, but remember how many
+df_zero_larvae_in_portions_afterConsump <- df_larvae_in_portions %>% 
   group_by( part, simulation, carcass ) %>% 
   summarize( n_zeros = sum(larvae_per_portion<=1), .groups="drop")
 
-df_larvae_in_portions <- df_larvae_in_portions %>% 
-  filter( larvae_per_portion >1 )
+df_larvae_in_portions_afterConsump <- df_larvae_in_portions %>% 
+  filter( larvae_per_portion > 1 )
 
-############################################
-# Cook the portions                        #
-############################################
 
-# First everything is cooked rare
-# Then it continues to either well done or medium
-# TODO: make nice scenarios for the cooking styles to replace the fixed numbers below
-# TODO: plugin new inactivation model
-df_larvae_in_portions <- df_larvae_in_portions %>% 
-  mutate( is_welldone = rbinom( n(), 1, p_welldone ))
+df_larvae_in_portions_afterConsump_file <- "df_larvae_in_portions_Cons.csv"
+write.csv(df_larvae_in_portions_afterConsump, file = df_larvae_in_portions_afterConsump_file, row.names = FALSE)
 
-# Remove all we don't need
-toremove <- grep("^df_larvae_in_portions$|^swine.table$|df_zero_larvae_in_portions", ls(), 
-                 invert = TRUE, value = TRUE)
-rm(list = c(toremove, "toremove"))
+df_zero_larvae_in_portions_afterConsump_file <- "df_zero_larvae_in_portions_Cons.csv"
+write.csv(df_zero_larvae_in_portions_afterConsump, file = df_zero_larvae_in_portions_afterConsump_file, row.names = FALSE)
