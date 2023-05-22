@@ -2,7 +2,7 @@ library(tidyverse)
 library(magrittr)
 library(dplyr)
 
-source("functions_meatProduction.r")
+source("functions_meatProduction.R")
 
 n_portions_per_part <- tibble(diaphragm = diaphragm,
                               shoulder  = shoulder,

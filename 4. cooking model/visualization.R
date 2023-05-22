@@ -10,7 +10,7 @@ library(ggplot2)
 (df_zero_larvae_in_portions_afterCook %>% 
   pivot_longer( starts_with("n_zeros"), names_to="zeros", values_to="value") %>% 
   ggplot() +
-    geom_boxplot( aes(x=part, y=value, color=zeros )) +
-    scale_y_log10("Nr of portions")+
+    geom_violin( aes(x=part, y=value, color=zeros )) +
+    scale_y_continuous( "Nr of portions")+
     ggtitle("Number of portions with zero larvae"))) %>% 
 print()

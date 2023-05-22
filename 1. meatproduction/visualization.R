@@ -6,7 +6,7 @@ plot_table <- swine_table %>%
   select( - simulation ) %>%
   mutate( has_falseneg = (n.falseneg!=0) ) %>% 
   group_by( has_falseneg ) %>% 
-  summarize( across( everything(), median, na.rm=T) ) 
+  summarize( across( everything(), \(x) median(x, na.rm=T ) ) ) 
 
 colnames( plot_table ) <-c("False negatives present",
                            "Number of swine",

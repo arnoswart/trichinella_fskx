@@ -3,7 +3,7 @@ library(magrittr)
 library(rapportools)
 library(dplyr)
 
-source("functions_consumption.r")
+source("functions_consumption.R")
 
 n_portions_per_part <- tibble(diaphragm = diaphragm,
                               shoulder  = shoulder,
