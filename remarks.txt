@@ -1,0 +1,6 @@
+== Remarks while trying to fill in the 'Model math' in the fskx editor node ==
+
+* Fitting procedure - this can be different per parameter. It would be more logical per parameter to have a 'source', which could be "literature", "fitted", "calculated", etc
+* I don't understand "Event", and the explanation "Definition of time-dependent parameter changes"
+* Where can I find the documentation?
+* Related: the RAKIP website can use a restructure (have a look at mc-stan)
